@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ username }}!</h1>
+    {% if is_admin %}
+    <p><a href="{{ url_for('admin_actions') }}">Admin Actions</a></p>
+    {% endif %}    
+    <p><a href="{{ url_for('create_task') }}">Create New Task</a></p>
+    <p><a href="{{ url_for('completed_tasks') }}">View Completed Tasks</a></p>
+    <p><a href="{{ url_for('assigned_tasks') }}">Tasks You've Assigned</a></p>
+    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+
+    <h2>Your Tasks:</h2>
+    <p><a href="{{ url_for('create_task') }}">Create New Task</a></p>
+
+    {% if tasks %}
+    <ul style="list-style-type: none; padding-left: 0;">
+        {% for task in tasks %}
+            <li>
+                <form method="post" action="{{ url_for('update_status', task_id=task['id']) }}" style="display: inline;">
+                    <input type="checkbox" name="status" value="Done" onchange="this.form.submit()">
+                </form>
+        
+                <!-- Make the task title clickable -->
+                <a href="{{ url_for('view_task', task_id=task['id']) }}">
+                    {{ task['title'] }}
+                </a>
+            </li>
+        {% endfor %}
+        </ul>
+        
+    {% else %}
+        <p>No tasks assigned to you.</p>
+    {% endif %}    
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Actions</title>
+</head>
+<body>
+    <h1>Admin Actions</h1>
+
+    <ul>
+        <li><a href="{{ url_for('all_tasks') }}">View All Tasks</a></li>
+        <li><a href="{{ url_for('manage_users') }}">Manage Users</a></li>
+        <li><a href="{{ url_for('create_user') }}">Create New User</a></li>
+    </ul>    
+
+    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+</body>
+</html>

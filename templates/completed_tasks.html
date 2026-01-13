@@ -1,0 +1,25 @@
+completed_tasks.html<!DOCTYPE html>
+<html>
+<head>
+    <title>Completed Tasks</title>
+</head>
+<body>
+    <h1>Completed Tasks for {{ username }}</h1>
+
+    {% if tasks %}
+        <ul>
+        {% for task in tasks %}
+            <li>
+                <strong>{{ task['title'] }}</strong> - {{ task['description'] }} <br>
+                Assigned by: {{ task['assigned_by'] }} | Due: {{ task['due_date'] }}
+                <a href="{{ url_for('view_task', task_id=task['id']) }}">Edit</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No completed tasks.</p>
+    {% endif %}
+
+    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+</body>
+</html>

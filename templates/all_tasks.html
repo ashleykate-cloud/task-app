@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Tasks (Admin)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            cursor: pointer;
+            background-color: #f2f2f2;
+        }
+
+        th:hover {
+            background-color: #e0e0e0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        a {
+            color: blue;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p.back-link {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>All Tasks (Admin)</h1>
+
+    {% if tasks %}
+        <table id="allTasksTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Assigned To</th>
+                    <th>Assigned By</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td>{{ task['title'] }}</td>
+                    <td>{{ task['assigned_to'] }}</td>
+                    <td>{{ task['assigned_by'] }}</td>
+                    <td>{{ task['due_date'] }}</td>
+                    <td>{{ task['status'] }}</td>
+                    <td><a href="{{ url_for('view_task', task_id=task['id']) }}">Edit</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tasks in the system.</p>
+    {% endif %}
+
+    <p class="back-link"><a href="{{ url_for('admin_actions') }}">Back to Admin Actions</a></p>
+
+    <script>
+    function sortTable(tableId, colIndex) {
+        const table = document.getElementById(tableId);
+        const rows = Array.from(table.tBodies[0].rows);
+        let asc = table.getAttribute("data-sort-dir") !== "asc";
+        table.setAttribute("data-sort-dir", asc ? "asc" : "desc");
+
+        rows.sort((a, b) => {
+            let cellA = a.cells[colIndex].innerText.toLowerCase();
+            let cellB = b.cells[colIndex].innerText.toLowerCase();
+
+            // Try to parse as date
+            const dateA = Date.parse(cellA);
+            const dateB = Date.parse(cellB);
+            if (!isNaN(dateA) && !isNaN(dateB)) {
+                cellA = dateA;
+                cellB = dateB;
+            }
+
+            if (cellA > cellB) return asc ? 1 : -1;
+            if (cellA < cellB) return asc ? -1 : 1;
+            return 0;
+        });
+
+        rows.forEach(row => table.tBodies[0].appendChild(row));
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const table = document.getElementById("allTasksTable");
+        const headers = table.tHead.rows[0].cells;
+        for (let i = 0; i < headers.length; i++) {
+            headers[i].addEventListener("click", () => sortTable("allTasksTable", i));
+        }
+    });
+    </script>
+</body>
+</html>
