@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import sqlite3
 
 app = Flask(__name__)
@@ -282,6 +282,12 @@ def create_task():
         users=users,
         current_user=current_user
     )
+
+@app.route("/download_db")
+def download_db():
+    if "username" not in session or not session.get("is_admin"):
+        return "Access denied"
+    return send_file("task_app.db", as_attachment=True)
 
 # LOGOUT ROUTE
 @app.route("/logout")
