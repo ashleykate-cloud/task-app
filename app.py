@@ -1,17 +1,45 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import sqlite3
 import datetime
+import os
+import sqlite3
 
-app = Flask(__name__)
-app.secret_key = "this-is-a-secret"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = "/opt/render/project/data"
 
-DATABASE = "task_app.db"
-
-# Database connection helper
+if os.path.exists(DATA_DIR):
+    DB_PATH = os.path.join(DATA_DIR, "task_app.db")
+else:
+    DB_PATH = os.path.join(BASE_DIR, "task_app.db")
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def init_db():
+    conn = get_db_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            is_admin INTEGER DEFAULT 0
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            due_date TEXT,
+            status TEXT,
+            assigned_to TEXT,
+            assigned_by TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
 
 # --------------------------
 # Context Processor for Globals
@@ -348,6 +376,9 @@ def logout():
     session.pop("username", None)
     session.pop("is_admin", None)
     return redirect(url_for("login"))
+
+# Ensure database + tables exist (important for Render)
+init_db()
 
 # --------------------------
 # START SERVER
