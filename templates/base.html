@@ -84,7 +84,7 @@
         {% if is_admin and request.endpoint != 'admin_actions' %}
             <hr>
             <div class="sidebar-item" onclick="window.location='{{ url_for('admin_actions') }}'">
-                <i class="fa-solid fa-gear"></i> Admin Actions
+                <i class="fa-solid fa-briefcase"></i> Admin Actions
             </div>
         {% endif %}
 
@@ -98,7 +98,13 @@
                 <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
             </div>
         {% endif %}
-
+        
+        <hr>
+            <div class="sidebar-item"
+                onclick="window.location='{{ url_for('edit_account') }}'">
+                <i class="fa-solid fa-gear"></i> Edit Account
+            </div>
+            
         <hr>
         <div class="sidebar-item logout" onclick="window.location='{{ url_for('logout') }}'">
             <i class="fa-solid fa-right-from-bracket"></i> Logout

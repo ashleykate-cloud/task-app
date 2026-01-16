@@ -234,6 +234,37 @@ def assigned_tasks():
 
     return render_template("assigned_tasks.html", username=username, tasks=tasks)
 
+@app.route("/edit_account", methods=["GET", "POST"])
+def edit_account():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    user = conn.execute(
+        "SELECT * FROM users WHERE username = ?", (session["username"],)
+    ).fetchone()
+
+    if request.method == "POST":
+        new_passcode = request.form.get("new_passcode", "")
+        confirm_passcode = request.form.get("confirm_passcode", "")
+
+        if not new_passcode:
+            return "Passcode cannot be empty", 400
+        if new_passcode != confirm_passcode:
+            return "Passcodes do not match", 400
+
+        # Update passcode
+        conn.execute(
+            "UPDATE users SET passcode = ? WHERE id = ?",
+            (new_passcode, user["id"])
+        )
+        conn.commit()
+        conn.close()
+        return redirect(url_for("dashboard"))
+
+    conn.close()
+    return render_template("edit_account.html")
+
 # --------------------------
 # ADMIN ROUTES
 # --------------------------
