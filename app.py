@@ -34,7 +34,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
-            password TEXT,
+            passcode TEXT,
             is_admin INTEGER DEFAULT 0
         )
     """)
@@ -74,7 +74,7 @@ def login():
 
         conn = get_db_connection()
         user = conn.execute(
-            "SELECT * FROM users WHERE username = ? AND password = ?",
+            "SELECT * FROM users WHERE username = ? AND passcode = ?",
             (username, passcode)
         ).fetchone()
         conn.close()
@@ -84,7 +84,7 @@ def login():
             session["is_admin"] = user["is_admin"]
             return redirect(url_for("dashboard"))
         else:
-            return "Invalid username or password"
+            return "Invalid username or passcode"
 
     return render_template("login.html")
 
