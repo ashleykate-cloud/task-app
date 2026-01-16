@@ -44,7 +44,7 @@
                 {% for user in users %}
                 <tr>
                     <td>{{ user['username'] }}</td>
-                    <td>{{ user['passcode'] }}</td>
+                    <td>{{ "Set" }}</td>
                     <td>{{ 'Yes' if user['is_admin'] == 1 else 'No' }}</td>
                     <td>
                         <a href="{{ url_for('edit_user', user_id=user['id']) }}"
