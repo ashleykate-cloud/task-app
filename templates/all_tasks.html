@@ -1,67 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>All Tasks (Admin)</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+{% extends "base.html" %}
 
-        h1 {
-            margin-bottom: 20px;
-        }
+{% block title %}All Tasks (Admin){% endblock %}
 
-        table {
-            border-collapse: collapse;
+{% block content %}
+<h2 style="margin-top: 0;">All Tasks</h2>
+
+{% if tasks %}
+    <div style="
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    ">
+        <table id="allTasksTable" style="
             width: 100%;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            cursor: pointer;
-            background-color: #f2f2f2;
-        }
-
-        th:hover {
-            background-color: #e0e0e0;
-        }
-
-        tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-
-        a {
-            color: blue;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        p.back-link {
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-    <h1>All Tasks (Admin)</h1>
-
-    {% if tasks %}
-        <table id="allTasksTable">
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        ">
             <thead>
                 <tr>
-                    <th>Title</th>
-                    <th>Assigned To</th>
-                    <th>Assigned By</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
+                    <th onclick="sortTable(0)">Title</th>
+                    <th onclick="sortTable(1)">Assigned To</th>
+                    <th onclick="sortTable(2)">Assigned By</th>
+                    <th onclick="sortTable(3)">Due Date</th>
+                    <th onclick="sortTable(4)">Status</th>
                     <th>Edit</th>
                 </tr>
             </thead>
@@ -73,51 +35,66 @@
                     <td>{{ task['assigned_by'] }}</td>
                     <td>{{ task['due_date'] }}</td>
                     <td>{{ task['status'] }}</td>
-                    <td><a href="{{ url_for('view_task', task_id=task['id']) }}">Edit</a></td>
+                    <td>
+                        <a href="{{ url_for('view_task', task_id=task['id']) }}"
+                           style="text-decoration: none; color: #1a73e8;">
+                            Edit
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>No tasks in the system.</p>
-    {% endif %}
+    </div>
+{% else %}
+    <p style="color: #5f6368;">No tasks in the system.</p>
+{% endif %}
 
-    <p class="back-link"><a href="{{ url_for('admin_actions') }}">Back to Admin Actions</a></p>
+<script>
+function sortTable(colIndex) {
+    const table = document.getElementById("allTasksTable");
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    const asc = table.getAttribute("data-sort-dir") !== "asc";
+    table.setAttribute("data-sort-dir", asc ? "asc" : "desc");
 
-    <script>
-    function sortTable(tableId, colIndex) {
-        const table = document.getElementById(tableId);
-        const rows = Array.from(table.tBodies[0].rows);
-        let asc = table.getAttribute("data-sort-dir") !== "asc";
-        table.setAttribute("data-sort-dir", asc ? "asc" : "desc");
+    rows.sort((a, b) => {
+        let A = a.cells[colIndex].innerText.toLowerCase();
+        let B = b.cells[colIndex].innerText.toLowerCase();
 
-        rows.sort((a, b) => {
-            let cellA = a.cells[colIndex].innerText.toLowerCase();
-            let cellB = b.cells[colIndex].innerText.toLowerCase();
-
-            // Try to parse as date
-            const dateA = Date.parse(cellA);
-            const dateB = Date.parse(cellB);
-            if (!isNaN(dateA) && !isNaN(dateB)) {
-                cellA = dateA;
-                cellB = dateB;
-            }
-
-            if (cellA > cellB) return asc ? 1 : -1;
-            if (cellA < cellB) return asc ? -1 : 1;
-            return 0;
-        });
-
-        rows.forEach(row => table.tBodies[0].appendChild(row));
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const table = document.getElementById("allTasksTable");
-        const headers = table.tHead.rows[0].cells;
-        for (let i = 0; i < headers.length; i++) {
-            headers[i].addEventListener("click", () => sortTable("allTasksTable", i));
+        const dateA = Date.parse(A);
+        const dateB = Date.parse(B);
+        if (!isNaN(dateA) && !isNaN(dateB)) {
+            A = dateA;
+            B = dateB;
         }
+
+        if (A > B) return asc ? 1 : -1;
+        if (A < B) return asc ? -1 : 1;
+        return 0;
     });
-    </script>
-</body>
-</html>
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
+
+<style>
+th {
+    text-align: left;
+    padding: 10px;
+    cursor: pointer;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dadce0;
+    font-weight: 500;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+    background: #f1f3f4;
+}
+</style>
+{% endblock %}

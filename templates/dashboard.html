@@ -1,40 +1,52 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Welcome, {{ username }}!</h1>
-    {% if is_admin %}
-    <p><a href="{{ url_for('admin_actions') }}">Admin Actions</a></p>
-    {% endif %}    
-    <p><a href="{{ url_for('create_task') }}">Create New Task</a></p>
-    <p><a href="{{ url_for('completed_tasks') }}">View Completed Tasks</a></p>
-    <p><a href="{{ url_for('assigned_tasks') }}">Tasks You've Assigned</a></p>
-    <p><a href="{{ url_for('logout') }}">Logout</a></p>
+{% extends "base.html" %}
 
-    <h2>Your Tasks:</h2>
-    <p><a href="{{ url_for('create_task') }}">Create New Task</a></p>
+{% block title %}Dashboard{% endblock %}
 
-    {% if tasks %}
-    <ul style="list-style-type: none; padding-left: 0;">
+{% block content %}
+<h2 style="margin-top: 0;">Your Tasks</h2>
+
+{% if tasks %}
+    <div style="
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        overflow: hidden;
+    ">
         {% for task in tasks %}
-            <li>
-                <form method="post" action="{{ url_for('update_status', task_id=task['id']) }}" style="display: inline;">
-                    <input type="checkbox" name="status" value="Done" onchange="this.form.submit()">
-                </form>
-        
-                <!-- Make the task title clickable -->
-                <a href="{{ url_for('view_task', task_id=task['id']) }}">
-                    {{ task['title'] }}
-                </a>
-            </li>
-        {% endfor %}
-        </ul>
-        
-    {% else %}
-        <p>No tasks assigned to you.</p>
-    {% endif %}    
+            {% set bg_color = 
+                '#f8d7da' if task['due_date'] and task['due_date'] < today else
+                '#fff3cd' if task['due_date'] and task['due_date'] == today else
+                'white' %}
+            
+            {% set text_color = 
+                'red' if task['due_date'] and task['due_date'] < today else
+                'orange' if task['due_date'] and task['due_date'] == today else
+                'gray' %}
 
-</body>
-</html>
+            <div class="task-card"
+                 style="background-color: {{ bg_color }};"
+                 onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
+
+                <!-- LEFT: Task info -->
+                <div>
+                    <div style="font-weight: bold; color: #202124;">{{ task['title'] }}</div>
+                    <div style="font-size: 0.8em; color: #5f6368;">
+                        Assigned by: {{ task['assigned_by'] }}
+                    </div>
+                </div>
+
+                <!-- RIGHT: Due date -->
+                <div style="font-size: 0.85em; color: {{ text_color }};">
+                    {% if task['due_date'] %}
+                        {{ task['due_date'] }}
+                    {% else %}
+                        No due date
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No tasks assigned to you.</p>
+{% endif %}
+{% endblock %}

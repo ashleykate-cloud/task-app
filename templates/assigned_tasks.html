@@ -1,28 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Tasks I've Assigned</title>
-</head>
-<body>
-    <h1>Tasks You've Assigned</h1>
+{% extends "base.html" %}
 
-    {% if tasks %}
-        <ul style="list-style-type: none; padding-left: 0;">
+{% block title %}Tasks You've Assigned{% endblock %}
+
+{% block content %}
+<h2 style="margin-top: 0;">Tasks You've Assigned</h2>
+
+{% if tasks %}
+    <div style="
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        max-width: 800px;
+    ">
         {% for task in tasks %}
-            <li>
-                <a href="{{ url_for('view_task', task_id=task['id']) }}">
-                    {{ task['title'] }}
-                </a>
-                {% if task['status'] == 'Done' %}
-                    - <em>Done</em>
-                {% endif %}
-            </li>
+            <div class="task-card"
+                 onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
+                <div>
+                    <strong>{{ task['title'] }}</strong>
+                    {% if task['status'] == 'Done' %}
+                        <span style="color: #188038; margin-left: 6px;">✔ Done</span>
+                    {% endif %}
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color: #9aa0a6;"></i>
+            </div>
         {% endfor %}
-        </ul>
-    {% else %}
-        <p>You haven't assigned any tasks yet.</p>
-    {% endif %}
-
-    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
-</body>
-</html>
+    </div>
+{% else %}
+    <p style="color: #5f6368;">You haven't assigned any tasks yet.</p>
+{% endif %}
+{% endblock %}

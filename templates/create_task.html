@@ -1,35 +1,63 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Task</title>
-</head>
-<body>
-    <h1>Create Task</h1>
+{% extends "base.html" %}
+
+{% block title %}Create Task{% endblock %}
+
+{% block content %}
+<h2 style="margin-top: 0;">Create Task</h2>
+
+<div style="
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    max-width: 600px;
+">
     <form method="post">
-        <label>Title:</label>
-        <input type="text" name="title"><br><br>
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-weight: 500;">Title</label>
+            <input type="text" name="title" required
+                   style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
 
-        <label>Description:</label><br>
-        <textarea name="description" rows="4" cols="50"></textarea><br><br>
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-weight: 500;">Description</label>
+            <textarea name="description" rows="4"
+                      style="width: 100%; padding: 8px; box-sizing: border-box;"></textarea>
+        </div>
 
-<label>Assign To:</label><br>
-<select name="assigned_to" multiple size="5">
-    {% for user in users %}
-        <option value="{{ user['username'] }}"
-            {% if user['username'] == current_user %}selected{% endif %}>
-            {{ user['username'] }}
-        </option>
-    {% endfor %}
-</select>
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-weight: 500;">Assign To</label>
+            <select name="assigned_to" multiple size="5"
+                    style="width: 100%; padding: 6px;">
+                {% for user in users %}
+                    <option value="{{ user['username'] }}"
+                        {% if user['username'] == current_user %}selected{% endif %}>
+                        {{ user['username'] }}
+                    </option>
+                {% endfor %}
+            </select>
+            <div style="font-size: 0.8rem; color: #5f6368; margin-top: 4px;">
+                Hold Ctrl (Windows) or Cmd (Mac) to select multiple users
+            </div>
+        </div>
 
-<p><small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple users</small></p>
+        <div style="margin-bottom: 18px;">
+            <label style="display: block; font-weight: 500;">Due Date</label>
+            <input type="date" name="due_date"
+                   style="padding: 6px;">
+        </div>
 
-        
-        <label>Due Date:</label>
-        <input type="date" name="due_date"><br><br>
-
-        <button type="submit">Create Task</button>
+        <button type="submit"
+                style="
+                    background: #1a73e8;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">
+            Create Task
+        </button>
     </form>
-    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
-</body>
-</html>
+</div>
+{% endblock %}

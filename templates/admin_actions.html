@@ -1,18 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Actions</title>
-</head>
-<body>
-    <h1>Admin Actions</h1>
+{% extends "base.html" %}
 
-    <ul>
-        <li><a href="{{ url_for('all_tasks') }}">View All Tasks</a></li>
-        <li><a href="{{ url_for('manage_users') }}">Manage Users</a></li>
-        <li><a href="{{ url_for('create_user') }}">Create New User</a></li>
-        <p><a href="{{ url_for('download_db') }}">Download Database Backup (For web service redeploy only)</a></p>
-    </ul>    
+{% block title %}Admin Actions{% endblock %}
 
-    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
-</body>
-</html>
+{% block content %}
+<h2 style="margin-top: 0;">Admin Actions</h2>
+
+<div style="display: flex; flex-direction: column; gap: 12px; max-width: 400px;">
+
+    <div class="admin-action-card" 
+         style="padding: 12px 15px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f1f3f4'"
+         onmouseout="this.style.background='white'"
+         onclick="window.location='{{ url_for('all_tasks') }}'">
+        <i class="fa-solid fa-list"></i> View All Tasks
+    </div>
+
+    <div class="admin-action-card" 
+         style="padding: 12px 15px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f1f3f4'"
+         onmouseout="this.style.background='white'"
+         onclick="window.location='{{ url_for('manage_users') }}'">
+        <i class="fa-solid fa-users"></i> Manage Users
+    </div>
+
+    <div class="admin-action-card" 
+         style="padding: 12px 15px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+         onmouseover="this.style.background='#f1f3f4'"
+         onmouseout="this.style.background='white'"
+         onclick="window.location='{{ url_for('create_user') }}'">
+        <i class="fa-solid fa-user-plus"></i> Create New User
+    </div>
+
+    <div class="admin-action-card" 
+         style="padding: 12px 15px; background: #ffffff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #d93025;"
+         onmouseover="this.style.background='#fce8e6'"
+         onmouseout="this.style.background='white'"
+         onclick="window.location='{{ url_for('download_db') }}'">
+        <i class="fa-solid fa-database"></i> Download Database Backup
+    </div>
+
+</div>
+{% endblock %}

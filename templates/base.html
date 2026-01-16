@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>{% block title %}Task App{% endblock %}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fc;
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #ffffff;
+            border-right: 1px solid #ddd;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* full viewport height so back button can go to bottom */
+        }
+        .sidebar h3 {
+            margin: 10px 0;
+        }
+        .sidebar-item {
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-item:hover {
+            background-color: #f1f3f4;
+        }
+        .sidebar-item.logout {
+            color: #d93025;
+        }
+        .sidebar hr {
+            margin: 10px 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+        .main {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .task-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .task-card:last-child {
+            border-bottom: none;
+        }
+        .back-dashboard {
+            margin-top: auto; /* pushes this button to the bottom of sidebar */
+        }
+    </style>
+</head>
+<body>
+<div style="display: flex; height: 100vh;">
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar">
+        
+        <h3>Actions</h3>
+
+        <div class="sidebar-item" onclick="window.location='{{ url_for('create_task') }}'">
+            <i class="fa-solid fa-plus"></i> Create Task
+        </div>
+
+        <div class="sidebar-item" onclick="window.location='{{ url_for('completed_tasks') }}'">
+            <i class="fa-solid fa-check"></i> Completed Tasks
+        </div>
+
+        <div class="sidebar-item" onclick="window.location='{{ url_for('assigned_tasks') }}'">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Assigned by You
+        </div>
+
+        {% if is_admin and request.endpoint != 'admin_actions' %}
+            <hr>
+            <div class="sidebar-item" onclick="window.location='{{ url_for('admin_actions') }}'">
+                <i class="fa-solid fa-gear"></i> Admin Actions
+            </div>
+        {% endif %}
+
+        <!-- FLEX SPACER -->
+        <div class="sidebar-spacer"></div>
+
+        {% if show_dashboard_button %}
+            <hr>
+            <div class="sidebar-item"
+                onclick="window.location='{{ url_for('dashboard') }}'">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </div>
+        {% endif %}
+
+        <hr>
+        <div class="sidebar-item logout" onclick="window.location='{{ url_for('logout') }}'">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </div>
+
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+</body>
+</html>

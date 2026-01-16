@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import sqlite3
+import datetime
 
 app = Flask(__name__)
 app.secret_key = "this-is-a-secret"
@@ -12,11 +13,23 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+# --------------------------
+# Context Processor for Globals
+# --------------------------
+@app.context_processor
+def inject_globals():
+    return dict(
+        is_admin=session.get("is_admin", 0),
+        show_dashboard_button=(request.path != url_for("dashboard"))
+    )
+
+# --------------------------
 # LOGIN ROUTE
+# --------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form["username"].strip().lower()
         passcode = request.form.get("passcode")
 
         conn = get_db_connection()
@@ -35,7 +48,9 @@ def login():
 
     return render_template("login.html")
 
-# DASHBOARD ROUTE
+# --------------------------
+# DASHBOARD
+# --------------------------
 @app.route("/dashboard")
 def dashboard():
     if "username" not in session:
@@ -46,19 +61,50 @@ def dashboard():
 
     conn = get_db_connection()
     tasks = conn.execute(
-        "SELECT * FROM tasks WHERE assigned_to = ? AND status = 'Pending' ORDER BY due_date ASC",
+        """
+        SELECT id, title, due_date, status, assigned_by
+        FROM tasks
+        WHERE assigned_to = ?
+        ORDER BY
+            CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END,
+            due_date ASC
+        """,
         (username,)
     ).fetchall()
     conn.close()
 
-    return render_template("dashboard.html", username=username, tasks=tasks, is_admin=is_admin)
+    today = datetime.date.today()
 
+    # Convert sqlite3.Row to mutable dicts and parse due_date
+    tasks_list = []
+    for task in tasks:
+        task_dict = dict(task)
+        due_date_str = task_dict.get("due_date")
+        if due_date_str:
+            try:
+                task_dict["due_date"] = datetime.datetime.strptime(due_date_str, "%Y-%m-%d").date()
+            except ValueError:
+                task_dict["due_date"] = None
+        else:
+            task_dict["due_date"] = None
+        tasks_list.append(task_dict)
+
+    return render_template(
+        "dashboard.html",
+        tasks=tasks_list,
+        username=username,
+        is_admin=is_admin,
+        today=today  # <--- THIS FIXES YOUR 'today' undefined error
+    )
+
+# --------------------------
+# TASK ROUTES
+# --------------------------
 @app.route("/update_status/<int:task_id>", methods=["POST"])
 def update_status(task_id):
     if "username" not in session:
         return redirect(url_for("login"))
 
-    # Only allow assigned user or admin to update
     conn = get_db_connection()
     task = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
     if not task:
@@ -68,11 +114,9 @@ def update_status(task_id):
         conn.close()
         return "Access denied!"
 
-    # Update the status to Done
     conn.execute("UPDATE tasks SET status = 'Done' WHERE id = ?", (task_id,))
     conn.commit()
     conn.close()
-
     return redirect(url_for("dashboard"))
 
 @app.route("/task/<int:task_id>", methods=["GET", "POST"])
@@ -87,8 +131,6 @@ def view_task(task_id):
 
     if not task:
         return "Task not found!"
-
-    # Only allow assigned user or admin to edit
     if session["username"] != task["assigned_to"] and session.get("is_admin") != 1:
         return "Access denied!"
 
@@ -111,17 +153,28 @@ def view_task(task_id):
 
     return render_template("view_task.html", task=task, users=users)
 
+@app.route("/delete_task/<int:task_id>", methods=["POST"])
+def delete_task(task_id):
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+    conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("dashboard"))
+
 @app.route("/completed_tasks")
 def completed_tasks():
     if "username" not in session:
         return redirect(url_for("login"))
 
     username = session["username"]
-
     conn = get_db_connection()
     tasks = conn.execute(
-    "SELECT * FROM tasks WHERE assigned_to = ? AND status = 'Done' ORDER BY due_date ASC",
-    (username,)
+        "SELECT * FROM tasks WHERE assigned_to = ? AND status = 'Done' ORDER BY due_date ASC",
+        (username,)
     ).fetchall()
     conn.close()
 
@@ -133,7 +186,6 @@ def assigned_tasks():
         return redirect(url_for("login"))
 
     username = session["username"]
-
     conn = get_db_connection()
     tasks = conn.execute(
         "SELECT * FROM tasks WHERE assigned_by = ?", (username,)
@@ -142,28 +194,24 @@ def assigned_tasks():
 
     return render_template("assigned_tasks.html", username=username, tasks=tasks)
 
+# --------------------------
+# ADMIN ROUTES
+# --------------------------
 @app.route("/admin_actions")
 def admin_actions():
     if "username" not in session:
         return redirect(url_for("login"))
-
-    # Only allow admin
     if session.get("is_admin") != 1:
         return "Access denied! Admins only."
-
     return render_template("admin_actions.html")
 
-# CREATE USER (admin only)
 @app.route("/create_user", methods=["GET", "POST"])
 def create_user():
-    if "username" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("is_admin") != 1:
+    if "username" not in session or session.get("is_admin") != 1:
         return "Access denied! Admins only."
 
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form["username"].strip().lower()
         passcode = request.form.get("passcode")
         is_admin = 1 if request.form.get("is_admin") == "on" else 0
 
@@ -175,32 +223,24 @@ def create_user():
         conn.commit()
         conn.close()
 
-        # Redirect to admin actions after creating the user
         return redirect(url_for("admin_actions"))
 
     return render_template("create_user.html")
 
 @app.route("/manage_users", methods=["GET", "POST"])
 def manage_users():
-    if "username" not in session:
-        return redirect(url_for("login"))
-
-    # Only admin
-    if session.get("is_admin") != 1:
+    if "username" not in session or session.get("is_admin") != 1:
         return "Access denied! Admins only."
 
     conn = get_db_connection()
-    users = conn.execute("SELECT * FROM users").fetchall()
+    users = conn.execute("SELECT * FROM users ORDER BY username ASC").fetchall()
     conn.close()
 
     return render_template("manage_users.html", users=users)
 
 @app.route("/edit_user/<int:user_id>", methods=["GET", "POST"])
 def edit_user(user_id):
-    if "username" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("is_admin") != 1:
+    if "username" not in session or session.get("is_admin") != 1:
         return "Access denied! Admins only."
 
     conn = get_db_connection()
@@ -211,7 +251,7 @@ def edit_user(user_id):
         return "User not found!"
 
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form["username"].strip().lower()
         passcode = request.form.get("passcode")
         is_admin = 1 if request.form.get("is_admin") == "on" else 0
 
@@ -226,13 +266,36 @@ def edit_user(user_id):
     conn.close()
     return render_template("edit_user.html", user=user)
 
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
+def delete_user(user_id):
+    if not session.get("is_admin"):
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+    current_user = session.get("username")
+    user = conn.execute("SELECT username, is_admin FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user:
+        conn.close()
+        return redirect(url_for("manage_users"))
+
+    if user["username"] == current_user:
+        conn.close()
+        return redirect(url_for("manage_users"))
+
+    if user["is_admin"] == 1:
+        admin_count = conn.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0]
+        if admin_count <= 1:
+            conn.close()
+            return redirect(url_for("manage_users"))
+
+    conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("manage_users"))
+
 @app.route("/all_tasks")
 def all_tasks():
-    if "username" not in session:
-        return redirect(url_for("login"))
-
-    # Only allow admin
-    if session.get("is_admin") != 1:
+    if "username" not in session or session.get("is_admin") != 1:
         return "Access denied! Admins only."
 
     conn = get_db_connection()
@@ -241,14 +304,12 @@ def all_tasks():
 
     return render_template("all_tasks.html", tasks=tasks)
 
-# CREATE TASK ROUTE
 @app.route("/create_task", methods=["GET", "POST"])
 def create_task():
     if "username" not in session:
         return redirect(url_for("login"))
 
     current_user = session["username"]
-
     conn = get_db_connection()
     users = conn.execute("SELECT username FROM users").fetchall()
     conn.close()
@@ -261,27 +322,17 @@ def create_task():
         assigned_by = current_user
 
         conn = get_db_connection()
-
         for assigned_to in assigned_to_list:
             conn.execute(
-                """
-                INSERT INTO tasks
-                (title, description, assigned_to, assigned_by, due_date, status)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
+                "INSERT INTO tasks (title, description, assigned_to, assigned_by, due_date, status) VALUES (?, ?, ?, ?, ?, ?)",
                 (title, description, assigned_to, assigned_by, due_date, "Pending")
             )
-
         conn.commit()
         conn.close()
 
         return redirect(url_for("dashboard"))
 
-    return render_template(
-        "create_task.html",
-        users=users,
-        current_user=current_user
-    )
+    return render_template("create_task.html", users=users, current_user=current_user)
 
 @app.route("/download_db")
 def download_db():
@@ -289,14 +340,17 @@ def download_db():
         return "Access denied"
     return send_file("task_app.db", as_attachment=True)
 
-# LOGOUT ROUTE
+# --------------------------
+# LOGOUT
+# --------------------------
 @app.route("/logout")
 def logout():
     session.pop("username", None)
     session.pop("is_admin", None)
     return redirect(url_for("login"))
 
+# --------------------------
 # START SERVER
+# --------------------------
 if __name__ == "__main__":
     app.run()
-

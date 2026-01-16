@@ -1,16 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create User</title>
-</head>
-<body>
-    <h1>Create New User</h1>
+{% extends "base.html" %}
+
+{% block title %}Create User{% endblock %}
+
+{% block content %}
+<h2 style="margin-top: 0;">Create New User</h2>
+
+<div style="
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    max-width: 400px;
+">
     <form method="post">
-        <label>Username:</label>
-        <input type="text" name="username"><br><br>
-        <label>Passcode:</label>
-        <input type="password" name="passcode"><br><br>
-        <button type="submit">Create User</button>
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-weight: 500;">Username</label>
+            <input type="text" name="username" required
+                   style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 18px;">
+            <label style="display: block; font-weight: 500;">Passcode</label>
+            <input type="password" name="passcode" required
+                   style="width: 100%; padding: 8px; box-sizing: border-box;">
+        </div>
+
+        <button type="submit"
+                style="
+                    background: #1a73e8;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">
+            Create User
+        </button>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}

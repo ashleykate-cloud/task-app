@@ -1,25 +1,34 @@
-completed_tasks.html<!DOCTYPE html>
-<html>
-<head>
-    <title>Completed Tasks</title>
-</head>
-<body>
-    <h1>Completed Tasks for {{ username }}</h1>
+{% extends "base.html" %}
 
-    {% if tasks %}
-        <ul>
+{% block title %}Completed Tasks{% endblock %}
+
+{% block content %}
+<h2 style="margin-top: 0;">Completed Tasks</h2>
+
+{% if tasks %}
+    <div style="
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        max-width: 900px;
+    ">
         {% for task in tasks %}
-            <li>
-                <strong>{{ task['title'] }}</strong> - {{ task['description'] }} <br>
-                Assigned by: {{ task['assigned_by'] }} | Due: {{ task['due_date'] }}
-                <a href="{{ url_for('view_task', task_id=task['id']) }}">Edit</a>
-            </li>
+            <div class="task-card"
+                 onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
+                <div>
+                    <strong>{{ task['title'] }}</strong>
+                    <div style="font-size: 0.85rem; color: #5f6368; margin-top: 4px;">
+                        Assigned by {{ task['assigned_by'] }} · Due {{ task['due_date'] }}
+                    </div>
+                </div>
+                <div style="color: #188038; font-weight: 500;">
+                    Done
+                </div>
+            </div>
         {% endfor %}
-        </ul>
-    {% else %}
-        <p>No completed tasks.</p>
-    {% endif %}
-
-    <p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
-</body>
-</html>
+    </div>
+{% else %}
+    <p style="color: #5f6368;">No completed tasks.</p>
+{% endif %}
+{% endblock %}

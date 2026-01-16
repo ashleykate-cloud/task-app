@@ -2,15 +2,69 @@
 <html>
 <head>
     <title>Login</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            width: 320px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 14px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>Login</h1>
-    <form method="post">
-        <label>Username:</label>
-        <input type="text" name="username"><br><br>
-        <label>Passcode:</label>
-        <input type="password" name="passcode"><br><br>
-        <button type="submit">Login</button>
-    </form>
+    <div class="login-card">
+        <h2>Login</h2>
+        <form method="post">
+            <label>Username</label>
+            <input type="text" name="username" required>
+
+            <label>Passcode</label>
+            <input type="password" name="passcode" required>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
 </body>
 </html>
