@@ -2,8 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, session, s
 import sqlite3
 import datetime
 import os
-import sqlite3
 
+# --------------------------
+# 1️ Initialize app
+# --------------------------
+app = Flask(__name__)
+app.secret_key = "this-is-a-secret"
+
+# --------------------------
+# 2️ Database paths
+# --------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = "/opt/render/project/data"
 
@@ -11,6 +19,10 @@ if os.path.exists(DATA_DIR):
     DB_PATH = os.path.join(DATA_DIR, "task_app.db")
 else:
     DB_PATH = os.path.join(BASE_DIR, "task_app.db")
+
+# --------------------------
+# 3️ Database helpers
+# --------------------------
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -42,7 +54,7 @@ def init_db():
 init_db()
 
 # --------------------------
-# Context Processor for Globals
+# 4️ Context Processor
 # --------------------------
 @app.context_processor
 def inject_globals():
@@ -52,7 +64,7 @@ def inject_globals():
     )
 
 # --------------------------
-# LOGIN ROUTE
+# 5️ Routes
 # --------------------------
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -62,7 +74,7 @@ def login():
 
         conn = get_db_connection()
         user = conn.execute(
-            "SELECT * FROM users WHERE username = ? AND passcode = ?",
+            "SELECT * FROM users WHERE username = ? AND password = ?",
             (username, passcode)
         ).fetchone()
         conn.close()
@@ -72,7 +84,7 @@ def login():
             session["is_admin"] = user["is_admin"]
             return redirect(url_for("dashboard"))
         else:
-            return "Invalid username or passcode"
+            return "Invalid username or password"
 
     return render_template("login.html")
 
