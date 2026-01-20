@@ -42,6 +42,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT,
+            description TEXT,
             due_date TEXT,
             status TEXT,
             assigned_to TEXT,
@@ -436,7 +437,7 @@ def logout():
 
 # Ensure database + tables exist (important for Render)
 init_db()
-# bootstrap_admin()
+bootstrap_admin()
 
 # --------------------------
 # START SERVER
