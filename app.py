@@ -186,7 +186,11 @@ def view_task(task_id):
 
     if not task:
         return "Task not found!"
-    if session["username"] != task["assigned_to"] and session.get("is_admin") != 1:
+    if (
+        session["username"] != task["assigned_to"]
+        and session["username"] != task["assigned_by"]
+        and session.get("is_admin") != 1
+    ):
         return "Access denied!"
 
     if request.method == "POST":
