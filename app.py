@@ -12,19 +12,13 @@ app.secret_key = "this-is-a-secret"
 # --------------------------
 # 2️ Database paths
 # --------------------------
-def bootstrap_admin():
-    conn = get_db_connection()
-    user_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = "/opt/render/project/data"
 
-    if user_count == 0:
-        conn.execute(
-            "INSERT INTO users (username, passcode, is_admin) VALUES (?, ?, ?)",
-            ("admin", "admin", 1)
-        )
-        conn.commit()
-        print("⚠️ Bootstrapped default admin: admin / admin")
-
-    conn.close()
+if os.path.exists(DATA_DIR):
+    DB_PATH = os.path.join(DATA_DIR, "task_app.db")
+else:
+    DB_PATH = os.path.join(BASE_DIR, "task_app.db")
 
 # --------------------------
 # 3️ Database helpers
@@ -58,6 +52,20 @@ def init_db():
     conn.close()
 
 init_db()
+
+def bootstrap_admin():
+    conn = get_db_connection()
+    user_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+
+    if user_count == 0:
+        conn.execute(
+            "INSERT INTO users (username, passcode, is_admin) VALUES (?, ?, ?)",
+            ("admin", "6160", 1)
+        )
+        conn.commit()
+        print("⚠️ Bootstrapped default admin: admin / admin")
+
+    conn.close()
 
 # --------------------------
 # 4️ Context Processor
@@ -428,7 +436,6 @@ def logout():
 
 # Ensure database + tables exist (important for Render)
 init_db()
-bootstrap_admin()
 
 
 # --------------------------
