@@ -436,7 +436,7 @@ def logout():
 
 # Ensure database + tables exist (important for Render)
 init_db()
-
+bootstrap_admin()
 
 # --------------------------
 # START SERVER
