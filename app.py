@@ -7,18 +7,21 @@ import os
 # 1️ Initialize app
 # --------------------------
 app = Flask(__name__)
-app.secret_key = "this-is-a-secret"
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
 # --------------------------
 # 2️ Database paths
 # --------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = "/opt/render/project/data"
 
-if os.path.exists(DATA_DIR):
+if os.getenv("RENDER"):  # Render-only
+    DATA_DIR = "/opt/render/project/data"
+    os.makedirs(DATA_DIR, exist_ok=True)
     DB_PATH = os.path.join(DATA_DIR, "task_app.db")
 else:
     DB_PATH = os.path.join(BASE_DIR, "task_app.db")
+
+#print("👉 Using database at:", DB_PATH)
 
 # --------------------------
 # 3️ Database helpers
@@ -120,6 +123,7 @@ def dashboard():
         SELECT id, title, due_date, status, assigned_by
         FROM tasks
         WHERE assigned_to = ?
+            AND status != 'Done'
         ORDER BY
             CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END,
             due_date ASC
@@ -179,6 +183,8 @@ def view_task(task_id):
     if "username" not in session:
         return redirect(url_for("login"))
 
+    current_user = session["username"]
+
     conn = get_db_connection()
     task = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
     users = conn.execute("SELECT username FROM users").fetchall()
@@ -187,8 +193,8 @@ def view_task(task_id):
     if not task:
         return "Task not found!"
     if (
-        session["username"] != task["assigned_to"]
-        and session["username"] != task["assigned_by"]
+        current_user != task["assigned_to"]
+        and current_user != task["assigned_by"]
         and session.get("is_admin") != 1
     ):
         return "Access denied!"
@@ -198,12 +204,30 @@ def view_task(task_id):
         description = request.form.get("description")
         assigned_to = request.form.get("assigned_to")
         due_date = request.form.get("due_date")
-        status = request.form.get("status")
+        done_checked = request.form.get("done")
+        status = "Done" if done_checked else "Pending"
+
+        # Determine who should be listed as assigned_by
+        if assigned_to != task["assigned_to"]:
+            # If the task is being reassigned to someone new, current user becomes the assigner
+            new_assigned_by = current_user
+        else:
+            # Otherwise, keep the original assigned_by
+            new_assigned_by = task["assigned_by"]
 
         conn = get_db_connection()
         conn.execute(
-            "UPDATE tasks SET title = ?, description = ?, assigned_to = ?, due_date = ?, status = ? WHERE id = ?",
-            (title, description, assigned_to, due_date, status, task_id)
+            """
+            UPDATE tasks
+            SET title = ?,
+                description = ?,
+                assigned_to = ?,
+                assigned_by = ?,   -- update only if reassigned
+                due_date = ?,
+                status = ?
+            WHERE id = ?
+            """,
+            (title, description, assigned_to, new_assigned_by, due_date, status, task_id)
         )
         conn.commit()
         conn.close()
@@ -251,7 +275,28 @@ def assigned_tasks():
     ).fetchall()
     conn.close()
 
-    return render_template("assigned_tasks.html", username=username, tasks=tasks)
+    today = datetime.date.today()
+
+    # Convert task due_date strings to date objects
+    tasks_list = []
+    for task in tasks:
+        task_dict = dict(task)
+        due_date_str = task_dict.get("due_date")
+        if due_date_str:
+            try:
+                task_dict["due_date"] = datetime.datetime.strptime(due_date_str, "%Y-%m-%d").date()
+            except ValueError:
+                task_dict["due_date"] = None
+        else:
+            task_dict["due_date"] = None
+        tasks_list.append(task_dict)
+
+    return render_template(
+        "assigned_tasks.html",
+        username=username,
+        tasks=tasks_list,
+        today=today
+    )
 
 @app.route("/edit_account", methods=["GET", "POST"])
 def edit_account():
@@ -400,6 +445,8 @@ def create_task():
         return redirect(url_for("login"))
 
     current_user = session["username"]
+
+    # Fetch users for the "Assign To" list
     conn = get_db_connection()
     users = conn.execute("SELECT username FROM users").fetchall()
     conn.close()
@@ -410,6 +457,10 @@ def create_task():
         assigned_to_list = request.form.getlist("assigned_to")
         due_date = request.form.get("due_date")
         assigned_by = current_user
+
+        # Default to today if no date selected
+        if not due_date:
+            due_date = datetime.date.today().isoformat()  # 'YYYY-MM-DD'
 
         conn = get_db_connection()
         for assigned_to in assigned_to_list:
@@ -422,13 +473,20 @@ def create_task():
 
         return redirect(url_for("dashboard"))
 
-    return render_template("create_task.html", users=users, current_user=current_user)
+    # Pass today's date to template for pre-filling
+    today = datetime.date.today().isoformat()
+    return render_template(
+        "create_task.html",
+        users=users,
+        current_user=current_user,
+        today=today  # <--- template uses this for value="{{ today }}"
+    )
 
 @app.route("/download_db")
 def download_db():
     if "username" not in session or not session.get("is_admin"):
         return "Access denied"
-    return send_file("task_app.db", as_attachment=True)
+    return send_file(DB_PATH, as_attachment=True)
 
 # --------------------------
 # LOGOUT

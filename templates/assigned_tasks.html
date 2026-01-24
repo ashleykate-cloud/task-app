@@ -14,15 +14,34 @@
         max-width: 800px;
     ">
         {% for task in tasks %}
+            {% set bg_color = '#f8d7da' if task['due_date'] and task['due_date'] < today else
+                              '#fff3cd' if task['due_date'] and task['due_date'] == today else
+                              'white' %}
+            
             <div class="task-card"
+                 style="background-color: {{ bg_color }}; padding: 12px; margin-bottom: 8px; border-radius: 6px; cursor: pointer;"
                  onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
+
+                <!-- LEFT: Task info -->
                 <div>
-                    <strong>{{ task['title'] }}</strong>
+                    <div style="font-weight: bold; color: #202124;">{{ task['title'] }}</div>
+                    <div style="font-size: 0.85em; color: #5f6368;">
+                        Assigned to: {{ task['assigned_to'] }}
+                    </div>
                     {% if task['status'] == 'Done' %}
-                        <span style="color: #188038; margin-left: 6px;">✔ Done</span>
+                        <span style="color: #188038;">✔ Done</span>
                     {% endif %}
                 </div>
-                <i class="fa-solid fa-chevron-right" style="color: #9aa0a6;"></i>
+
+                <!-- RIGHT: Due date -->
+                <div style="font-size: 0.85em; color: gray;">
+                    {% if task['due_date'] %}
+                        {{ task['due_date'] }}
+                    {% else %}
+                        No due date
+                    {% endif %}
+                </div>
+
             </div>
         {% endfor %}
     </div>

@@ -49,18 +49,13 @@
         </div>
 
         <div style="margin-bottom: 18px;">
-            <label style="display: block; font-weight: 500;">Status</label>
-            <select name="status"
-                    style="padding: 6px;">
-                <option value="Pending"
-                        {% if task['status'] == 'Pending' %}selected{% endif %}>
-                    Pending
-                </option>
-                <option value="Done"
-                        {% if task['status'] == 'Done' %}selected{% endif %}>
-                    Done
-                </option>
-            </select>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+                <input type="checkbox"
+                    name="done"
+                    value="1"
+                    {% if task['status'] == 'Done' %}checked{% endif %}>
+                Done
+            </label>
         </div>
 
         <button type="submit"
