@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import sqlite3
 import datetime
+from zoneinfo import ZoneInfo
 import os
 
 # --------------------------
@@ -21,11 +22,18 @@ if os.getenv("RENDER"):  # Render-only
 else:
     DB_PATH = os.path.join(BASE_DIR, "task_app.db")
 
+APP_TZ = ZoneInfo("America/Los_Angeles")
+
 #print("👉 Using database at:", DB_PATH)
+#print("UTC:", datetime.datetime.utcnow())
+#print("Local:", datetime.datetime.now(APP_TZ))
 
 # --------------------------
 # 3️ Database helpers
 # --------------------------
+def today_local():
+    return datetime.datetime.now(APP_TZ).date()
+
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -132,7 +140,7 @@ def dashboard():
     ).fetchall()
     conn.close()
 
-    today = datetime.date.today()
+    today = today_local()
 
     # Convert sqlite3.Row to mutable dicts and parse due_date
     tasks_list = []
@@ -275,7 +283,7 @@ def assigned_tasks():
     ).fetchall()
     conn.close()
 
-    today = datetime.date.today()
+    today = today_local()
 
     # Convert task due_date strings to date objects
     tasks_list = []
@@ -460,7 +468,7 @@ def create_task():
 
         # Default to today if no date selected
         if not due_date:
-            due_date = datetime.date.today().isoformat()  # 'YYYY-MM-DD'
+            due_date = today_local().isoformat()
 
         conn = get_db_connection()
         for assigned_to in assigned_to_list:
@@ -474,7 +482,7 @@ def create_task():
         return redirect(url_for("dashboard"))
 
     # Pass today's date to template for pre-filling
-    today = datetime.date.today().isoformat()
+    today = today_local().isoformat()
     return render_template(
         "create_task.html",
         users=users,
