@@ -1,25 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}My Tasks{% endblock %}
 
 {% block content %}
-<h2 style="margin-top: 0;">Your Tasks</h2>
-
-<!-- Banner for all-tasks-completed -->
-{% if confetti %}
-<div id="confetti-banner" style="
-    background-color: #e6f4ea;
-    color: #188038;
-    font-weight: bold;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-">
-    All tasks completed for today!
-</div>
-{% endif %}
+<h2 style="margin-top: 0;">Tasks You've Assigned to Yourself</h2>
 
 {% if tasks %}
     <div style="
@@ -29,12 +13,12 @@
         overflow: hidden;
     ">
         {% for task in tasks %}
-            {% set bg_color = 
+            {% set bg_color =
                 '#f8d7da' if task['due_date'] and task['due_date'] < today else
                 '#fff3cd' if task['due_date'] and task['due_date'] == today else
                 'white' %}
-            
-            {% set text_color = 
+
+            {% set text_color =
                 'red' if task['due_date'] and task['due_date'] < today else
                 'orange' if task['due_date'] and task['due_date'] == today else
                 'gray' %}
@@ -45,9 +29,11 @@
 
                 <!-- LEFT: Task info -->
                 <div>
-                    <div style="font-weight: bold; color: #202124;">{{ task['title'] }}</div>
+                    <div style="font-weight: bold; color: #202124;">
+                        {{ task['title'] }}
+                    </div>
                     <div style="font-size: 0.8em; color: #5f6368;">
-                        Assigned by: {{ task['assigned_by'] }}
+                        Assigned by you
                     </div>
                 </div>
 
@@ -63,20 +49,6 @@
         {% endfor %}
     </div>
 {% else %}
-    <p>No tasks assigned to you.</p>
+    <p>You don’t have any tasks assigned to yourself.</p>
 {% endif %}
-
-<!-- Confetti JS -->
-{% if confetti %}
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script>
-    // simple confetti burst
-    confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.6 }
-    });
-</script>
-{% endif %}
-
 {% endblock %}

@@ -21,15 +21,19 @@
                    required
                    style="width: 100%; padding: 8px; box-sizing: border-box;">
         </div>
-
-        <div style="margin-bottom: 14px;">
+        
+        <div style="margin-bottom: 8px;">
             <label style="display: block; font-weight: 500;">Description</label>
             <textarea name="description" rows="4"
                       style="width: 100%; padding: 8px; box-sizing: border-box;">{{ task['description'] }}</textarea>
         </div>
 
+        <div style="margin-bottom: 10px;">
+            <label style="display: block; font-weight: 500;">Assigned By: {{ task['assigned_by'] }}</label>
+        </div>
+
         <div style="margin-bottom: 14px;">
-            <label style="display: block; font-weight: 500;">Assign To</label>
+            <label style="display: block; font-weight: 500;">Assign To:</label>
             <select name="assigned_to"
                     style="width: 100%; padding: 6px;">
                 {% for user in users %}

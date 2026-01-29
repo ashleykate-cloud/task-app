@@ -156,12 +156,19 @@ def dashboard():
             task_dict["due_date"] = None
         tasks_list.append(task_dict)
 
+    # Determine if confetti should show
+    tasks_due_today = [t for t in tasks_list if t['due_date'] == today and t['status'] != 'Done']
+    overdue_tasks = [t for t in tasks_list if t['due_date'] and t['due_date'] < today and t['status'] != 'Done']
+
+    confetti_flag = len(tasks_due_today) == 0 and len(overdue_tasks) == 0
+
     return render_template(
         "dashboard.html",
         tasks=tasks_list,
         username=username,
         is_admin=is_admin,
-        today=today  # <--- THIS FIXES YOUR 'today' undefined error
+        today=today,
+        confetti=confetti_flag
     )
 
 # --------------------------
@@ -303,6 +310,55 @@ def assigned_tasks():
         "assigned_tasks.html",
         username=username,
         tasks=tasks_list,
+        today=today
+    )
+@app.route("/my_tasks")
+def my_tasks():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    username = session["username"]
+    is_admin = session.get("is_admin", 0)
+
+    conn = get_db_connection()
+    tasks = conn.execute(
+        """
+        SELECT id, title, due_date, status, assigned_by
+        FROM tasks
+        WHERE assigned_to = ?
+          AND assigned_by = ?
+          AND status != 'Done'
+        ORDER BY
+            CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END,
+            due_date ASC
+        """,
+        (username, username)
+    ).fetchall()
+    conn.close()
+
+    today = today_local()
+
+    # Convert rows → dicts and parse due_date (same as dashboard)
+    tasks_list = []
+    for task in tasks:
+        task_dict = dict(task)
+        due_date_str = task_dict.get("due_date")
+        if due_date_str:
+            try:
+                task_dict["due_date"] = datetime.datetime.strptime(
+                    due_date_str, "%Y-%m-%d"
+                ).date()
+            except ValueError:
+                task_dict["due_date"] = None
+        else:
+            task_dict["due_date"] = None
+        tasks_list.append(task_dict)
+
+    return render_template(
+        "my_tasks.html",
+        tasks=tasks_list,
+        username=username,
+        is_admin=is_admin,
         today=today
     )
 
