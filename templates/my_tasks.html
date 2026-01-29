@@ -7,10 +7,11 @@
 
 {% if tasks %}
     <div style="
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        overflow: hidden;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        max-width: 800px;
     ">
         {% for task in tasks %}
             {% set bg_color =
@@ -24,7 +25,15 @@
                 'gray' %}
 
             <div class="task-card"
-                 style="background-color: {{ bg_color }};"
+                 style="background-color: {{ bg_color }};
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 12px;
+                        border-radius: 6px;
+                        border-bottom: 1px solid #ddd;
+                        cursor: pointer;
+                        margin-bottom: 4px;"
                  onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
 
                 <!-- LEFT: Task info -->
@@ -32,13 +41,13 @@
                     <div style="font-weight: bold; color: #202124;">
                         {{ task['title'] }}
                     </div>
-                    <div style="font-size: 0.8em; color: #5f6368;">
+                    <div style="font-size: 0.85em; color: #5f6368;">
                         Assigned by you
                     </div>
                 </div>
 
                 <!-- RIGHT: Due date -->
-                <div style="font-size: 0.85em; color: {{ text_color }};">
+                <div style="font-size: 0.85em; color: {{ text_color }}; text-align: right;">
                     {% if task['due_date'] %}
                         {{ task['due_date'] }}
                     {% else %}
@@ -49,6 +58,6 @@
         {% endfor %}
     </div>
 {% else %}
-    <p>You don’t have any tasks assigned to yourself.</p>
+    <p style="color: #5f6368;">You don’t have any tasks assigned to yourself.</p>
 {% endif %}
 {% endblock %}

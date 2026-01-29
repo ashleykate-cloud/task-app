@@ -131,7 +131,7 @@ def dashboard():
         SELECT id, title, due_date, status, assigned_by
         FROM tasks
         WHERE assigned_to = ?
-            AND status != 'Done'
+          AND status != 'Done'
         ORDER BY
             CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END,
             due_date ASC
@@ -142,7 +142,7 @@ def dashboard():
 
     today = today_local()
 
-    # Convert sqlite3.Row to mutable dicts and parse due_date
+    # Convert sqlite3.Row → dict and parse due_date
     tasks_list = []
     for task in tasks:
         task_dict = dict(task)
@@ -156,10 +156,9 @@ def dashboard():
             task_dict["due_date"] = None
         tasks_list.append(task_dict)
 
-    # Determine if confetti should show
+    # Confetti: only if no tasks due today AND no overdue tasks
     tasks_due_today = [t for t in tasks_list if t['due_date'] == today and t['status'] != 'Done']
     overdue_tasks = [t for t in tasks_list if t['due_date'] and t['due_date'] < today and t['status'] != 'Done']
-
     confetti_flag = len(tasks_due_today) == 0 and len(overdue_tasks) == 0
 
     return render_template(

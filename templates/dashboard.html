@@ -13,46 +13,59 @@
     font-weight: bold;
     padding: 12px;
     border-radius: 6px;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 ">
-    🎉 All tasks completed for today!
+    All tasks completed for today!
 </div>
 {% endif %}
 
 {% if tasks %}
     <div style="
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        overflow: hidden;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        max-width: 800px;
     ">
         {% for task in tasks %}
-            {% set bg_color = 
+            {% set bg_color =
                 '#f8d7da' if task['due_date'] and task['due_date'] < today else
                 '#fff3cd' if task['due_date'] and task['due_date'] == today else
                 'white' %}
             
-            {% set text_color = 
+            {% set text_color =
                 'red' if task['due_date'] and task['due_date'] < today else
                 'orange' if task['due_date'] and task['due_date'] == today else
                 'gray' %}
 
             <div class="task-card"
-                 style="background-color: {{ bg_color }}; display: flex; justify-content: space-between; align-items: center;"
+                 style="background-color: {{ bg_color }};
+                        padding: 12px 15px;
+                        margin-bottom: 4px;
+                        border-radius: 6px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        cursor: pointer;"
                  onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
 
                 <!-- LEFT: Task info -->
                 <div>
-                    <div style="font-weight: bold; color: #202124;">{{ task['title'] }}</div>
-                    <div style="font-size: 0.8em; color: #5f6368;">
+                    <div style="font-weight: bold; color: #202124;">
+                        {{ task['title'] }}
+                    </div>
+                    <div style="font-size: 0.85em; color: #5f6368;">
                         Assigned by: {{ task['assigned_by'] }}
                     </div>
+                    {% if task['status'] == 'Done' %}
+                        <span style="color: #188038;">✔ Done</span>
+                    {% endif %}
                 </div>
 
                 <!-- RIGHT: Due date -->
-                <div style="font-size: 0.85em; color: {{ text_color }};">
+                <div style="font-size: 0.85em; color: {{ text_color }}; text-align: right;">
                     {% if task['due_date'] %}
                         {{ task['due_date'] }}
                     {% else %}
@@ -63,17 +76,16 @@
         {% endfor %}
     </div>
 {% else %}
-    <p>No tasks assigned to you.</p>
+    <p style="color: #5f6368;">No tasks assigned to you.</p>
 {% endif %}
 
-<!-- Confetti JS -->
 {% if confetti %}
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
     // simple confetti burst
     confetti({
-        particleCount: 150,
-        spread: 80,
+        particleCount: 100,
+        spread: 70,
         origin: { y: 0.6 }
     });
 </script>

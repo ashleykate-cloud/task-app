@@ -15,16 +15,36 @@
     ">
         {% for task in tasks %}
             <div class="task-card"
+                 style="background-color: #e6ebdf;  /* lighter grey-green */
+                        padding: 12px;
+                        margin-bottom: 8px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;"
                  onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
+
+                <!-- LEFT: Task info with inline Done -->
                 <div>
-                    <strong>{{ task['title'] }}</strong>
-                    <div style="font-size: 0.85rem; color: #5f6368; margin-top: 4px;">
-                        Assigned by {{ task['assigned_by'] }} · Due {{ task['due_date'] }}
+                    <div style="font-weight: bold; color: #202124; display: flex; align-items: center;">
+                        {{ task['title'] }}
+                        <span style="color: #188038; font-weight: normal; margin-left: 8px;">✔ Done</span>
+                    </div>
+                    <div style="font-size: 0.85em; color: #5f6368;">
+                        Assigned by {{ task['assigned_by'] }}
                     </div>
                 </div>
-                <div style="color: #188038; font-weight: 500;">
-                    Done
+
+                <!-- RIGHT: Due date -->
+                <div style="font-size: 0.85em; color: gray; text-align: right;">
+                    {% if task['due_date'] %}
+                        {{ task['due_date'] }}
+                    {% else %}
+                        No due date
+                    {% endif %}
                 </div>
+
             </div>
         {% endfor %}
     </div>

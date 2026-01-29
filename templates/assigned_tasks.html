@@ -19,22 +19,31 @@
                               'white' %}
             
             <div class="task-card"
-                 style="background-color: {{ bg_color }}; padding: 12px; margin-bottom: 8px; border-radius: 6px; cursor: pointer;"
+                 style="background-color: {{ bg_color }};
+                        padding: 12px;
+                        margin-bottom: 8px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;"
                  onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
 
                 <!-- LEFT: Task info -->
                 <div>
-                    <div style="font-weight: bold; color: #202124;">{{ task['title'] }}</div>
+                    <div style="font-weight: bold; color: #202124; display: flex; align-items: center;">
+                        {{ task['title'] }}
+                        {% if task['status'] == 'Done' %}
+                            <span style="color: #188038; margin-left: 8px; font-weight: normal;">✔ Done</span>
+                        {% endif %}
+                    </div>
                     <div style="font-size: 0.85em; color: #5f6368;">
                         Assigned to: {{ task['assigned_to'] }}
                     </div>
-                    {% if task['status'] == 'Done' %}
-                        <span style="color: #188038;">✔ Done</span>
-                    {% endif %}
                 </div>
 
                 <!-- RIGHT: Due date -->
-                <div style="font-size: 0.85em; color: gray;">
+                <div style="font-size: 0.85em; color: gray; text-align: right;">
                     {% if task['due_date'] %}
                         {{ task['due_date'] }}
                     {% else %}
