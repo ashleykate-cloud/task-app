@@ -17,7 +17,7 @@
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 ">
-    All tasks completed for today!
+    🎉 All tasks completed for today!
 </div>
 {% endif %}
 
@@ -40,7 +40,7 @@
                 'gray' %}
 
             <div class="task-card"
-                 style="background-color: {{ bg_color }};"
+                 style="background-color: {{ bg_color }}; display: flex; justify-content: space-between; align-items: center;"
                  onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
 
                 <!-- LEFT: Task info -->
