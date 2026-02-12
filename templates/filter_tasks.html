@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Filter Tasks{% endblock %}
+
+{% block content %}
+
+<h2 style="margin-top: 0;">Your Tasks</h2>
+
+<!-- ================= FILTER BAR ================= -->
+<form method="GET"
+      action="{{ url_for('filter_tasks') }}"
+      style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+
+    <label for="assigned_by" style="font-weight: 500;">
+        Filter by:
+    </label>
+
+    <select name="assigned_by"
+            id="assigned_by"
+            onchange="this.form.submit()"
+            style="
+                padding: 6px 12px;
+                border-radius: 6px;
+                border: 1px solid #ccc;
+                font-size: 0.95em;
+                background-color: white;
+            ">
+
+        <option value="" {% if not selected_user %}selected{% endif %}>
+            All Tasks
+        </option>
+
+        <option value="me" {% if selected_user == "me" %}selected{% endif %}>
+            Assigned by Me
+        </option>
+
+        <option value="others" {% if selected_user == "others" %}selected{% endif %}>
+            Assigned by Others
+        </option>
+
+        {% for user in users %}
+            {% if user != username %}
+                <option value="{{ user }}"
+                    {% if selected_user == user %}selected{% endif %}>
+                    {{ user }}
+                </option>
+            {% endif %}
+        {% endfor %}
+
+    </select>
+
+</form>
+
+<!-- ================= TASK LIST ================= -->
+{% if tasks %}
+<div style="
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    max-width: 900px;
+">
+
+    {% for task in tasks %}
+
+        {% set bg_color =
+            '#f8d7da' if task['due_date'] and task['due_date'] < today else
+            '#fff3cd' if task['due_date'] and task['due_date'] == today else
+            'white' %}
+
+        {% set text_color =
+            'red' if task['due_date'] and task['due_date'] < today else
+            'orange' if task['due_date'] and task['due_date'] == today else
+            'gray' %}
+
+        <div class="task-card"
+             style="
+                background-color: {{ bg_color }};
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 14px;
+                border-radius: 6px;
+                border-bottom: 1px solid #eee;
+                cursor: pointer;
+                margin-bottom: 6px;
+                transition: background-color 0.2s ease;
+             "
+             onclick="window.location='{{ url_for('view_task', task_id=task['id']) }}'">
+
+            <!-- LEFT SIDE -->
+            <div>
+                <div style="font-weight: 600; color: #202124;">
+                    {{ task['title'] }}
+                </div>
+
+                <div style="font-size: 0.85em; color: #5f6368;">
+                    {% if task['assigned_by'] == username %}
+                        Assigned by You
+                    {% else %}
+                        Assigned by {{ task['assigned_by'] }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div style="font-size: 0.85em; color: {{ text_color }}; text-align: right;">
+                {% if task['due_date'] %}
+                    {{ task['due_date'] }}
+                {% else %}
+                    No due date
+                {% endif %}
+            </div>
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+<p style="color: #5f6368;">No tasks match your filter.</p>
+{% endif %}
+
+{% endblock %}

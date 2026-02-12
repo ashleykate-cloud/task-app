@@ -94,8 +94,8 @@
         </div>
 
         <div class="sidebar-item"
-             onclick="window.location='{{ url_for('my_tasks') }}'">
-            <i class="fa-solid fa-user-check"></i> Assigned to Yourself
+             onclick="window.location='{{ url_for('filter_tasks') }}'">
+            <i class="fa-solid fa-filter"></i> Filter My Tasks
         </div>
         
         {% if is_admin and request.endpoint != 'admin_actions' %}
@@ -131,7 +131,26 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="main">
+<!-- MAIN CONTENT -->
+<!-- MAIN CONTENT -->
+    <div class="main" style="position: relative;">
+
+        {% if session.get('username') %}
+            <div style="
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                font-size: 0.85rem;
+                background: #f1f3f4;
+                padding: 6px 12px;
+                border-radius: 20px;
+                color: #5f6368;
+            ">
+                <i class="fa-solid fa-user"></i>
+                {{ session['username'] }}
+            </div>
+        {% endif %}
+
         {% block content %}{% endblock %}
     </div>
 

@@ -223,10 +223,8 @@ def view_task(task_id):
 
         # Determine who should be listed as assigned_by
         if assigned_to != task["assigned_to"]:
-            # If the task is being reassigned to someone new, current user becomes the assigner
             new_assigned_by = current_user
         else:
-            # Otherwise, keep the original assigned_by
             new_assigned_by = task["assigned_by"]
 
         conn = get_db_connection()
@@ -236,7 +234,7 @@ def view_task(task_id):
             SET title = ?,
                 description = ?,
                 assigned_to = ?,
-                assigned_by = ?,   -- update only if reassigned
+                assigned_by = ?,
                 due_date = ?,
                 status = ?
             WHERE id = ?
@@ -246,7 +244,11 @@ def view_task(task_id):
         conn.commit()
         conn.close()
 
-        return redirect(url_for("dashboard"))
+        # 👇 NEW: Check which button was pressed
+        if request.form.get("action") == "close":
+            return redirect(url_for("dashboard"))
+        else:
+            return redirect(url_for("view_task", task_id=task_id))
 
     return render_template("view_task.html", task=task, users=users)
 
@@ -268,80 +270,24 @@ def completed_tasks():
         return redirect(url_for("login"))
 
     username = session["username"]
-    conn = get_db_connection()
-    tasks = conn.execute(
-        "SELECT * FROM tasks WHERE assigned_to = ? AND status = 'Done' ORDER BY due_date ASC",
-        (username,)
-    ).fetchall()
-    conn.close()
-
-    return render_template("completed_tasks.html", username=username, tasks=tasks)
-
-@app.route("/assigned_tasks")
-def assigned_tasks():
-    if "username" not in session:
-        return redirect(url_for("login"))
-
-    username = session["username"]
-    conn = get_db_connection()
-    tasks = conn.execute(
-        "SELECT * FROM tasks WHERE assigned_by = ?", (username,)
-    ).fetchall()
-    conn.close()
-
-    today = today_local()
-
-    # Convert task due_date strings to date objects
-    tasks_list = []
-    for task in tasks:
-        task_dict = dict(task)
-        due_date_str = task_dict.get("due_date")
-        if due_date_str:
-            try:
-                task_dict["due_date"] = datetime.datetime.strptime(due_date_str, "%Y-%m-%d").date()
-            except ValueError:
-                task_dict["due_date"] = None
-        else:
-            task_dict["due_date"] = None
-        tasks_list.append(task_dict)
-
-    return render_template(
-        "assigned_tasks.html",
-        username=username,
-        tasks=tasks_list,
-        today=today
-    )
-@app.route("/my_tasks")
-def my_tasks():
-    if "username" not in session:
-        return redirect(url_for("login"))
-
-    username = session["username"]
-    is_admin = session.get("is_admin", 0)
 
     conn = get_db_connection()
     tasks = conn.execute(
         """
-        SELECT id, title, due_date, status, assigned_by
-        FROM tasks
-        WHERE assigned_to = ?
-          AND assigned_by = ?
-          AND status != 'Done'
-        ORDER BY
-            CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END,
-            due_date ASC
+        SELECT * FROM tasks
+        WHERE assigned_to = ? AND status = 'Done'
         """,
-        (username, username)
+        (username,)
     ).fetchall()
     conn.close()
 
-    today = today_local()
-
-    # Convert rows → dicts and parse due_date (same as dashboard)
     tasks_list = []
+
     for task in tasks:
         task_dict = dict(task)
         due_date_str = task_dict.get("due_date")
+
+        # Convert due_date string to date object
         if due_date_str:
             try:
                 task_dict["due_date"] = datetime.datetime.strptime(
@@ -351,14 +297,142 @@ def my_tasks():
                 task_dict["due_date"] = None
         else:
             task_dict["due_date"] = None
+
         tasks_list.append(task_dict)
 
+    tasks_list.sort(
+        key=lambda t: (t["due_date"] is None, t["due_date"]),
+        reverse=True
+    )
+
     return render_template(
-        "my_tasks.html",
-        tasks=tasks_list,
+        "completed_tasks.html",
         username=username,
-        is_admin=is_admin,
+        tasks=tasks_list
+    )
+
+@app.route("/assigned_tasks")
+def assigned_tasks():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    username = session["username"]
+
+    conn = get_db_connection()
+    tasks = conn.execute(
+        "SELECT * FROM tasks WHERE assigned_by = ?",
+        (username,)
+    ).fetchall()
+    conn.close()
+
+    today = today_local()
+
+    tasks_list = []
+
+    for task in tasks:
+        task_dict = dict(task)
+        due_date_str = task_dict.get("due_date")
+
+        # Convert due_date string to date object
+        if due_date_str:
+            try:
+                task_dict["due_date"] = datetime.datetime.strptime(
+                    due_date_str, "%Y-%m-%d"
+                ).date()
+            except ValueError:
+                task_dict["due_date"] = None
+        else:
+            task_dict["due_date"] = None
+
+        tasks_list.append(task_dict)
+
+    tasks_list.sort(
+        key=lambda t: (t["due_date"] is None, t["due_date"]),
+        reverse=True
+    )
+
+    return render_template(
+        "assigned_tasks.html",
+        username=username,
+        tasks=tasks_list,
         today=today
+    )
+@app.route("/filter_tasks")
+def filter_tasks():
+    if "username" not in session:
+        return redirect(url_for("login"))
+
+    username = session["username"]
+    selected_user = request.args.get("assigned_by")  # from dropdown
+
+    conn = get_db_connection()
+
+    # Get unique assigners for this user
+    assigners = conn.execute(
+        """
+        SELECT DISTINCT assigned_by
+        FROM tasks
+        WHERE assigned_to = ?
+        """,
+        (username,)
+    ).fetchall()
+
+    users = [row["assigned_by"] for row in assigners]
+
+    # Base query
+    query = """
+        SELECT * FROM tasks
+        WHERE assigned_to = ?
+          AND status != 'Done'
+    """
+    params = [username]
+
+    # Apply filter if selected
+    if selected_user == "me":
+        query += " AND assigned_by = ?"
+        params.append(username)
+
+    elif selected_user == "others":
+        query += " AND assigned_by != ?"
+        params.append(username)
+
+    elif selected_user:
+        query += " AND assigned_by = ?"
+        params.append(selected_user)
+
+    tasks = conn.execute(query, tuple(params)).fetchall()
+    conn.close()
+
+    # Convert due_date strings → date objects
+    tasks_list = []
+    for task in tasks:
+        task_dict = dict(task)
+        due_date_str = task_dict.get("due_date")
+
+        if due_date_str:
+            try:
+                task_dict["due_date"] = datetime.datetime.strptime(
+                    due_date_str, "%Y-%m-%d"
+                ).date()
+            except ValueError:
+                task_dict["due_date"] = None
+        else:
+            task_dict["due_date"] = None
+
+        tasks_list.append(task_dict)
+
+    # Sort: soonest due first, None last
+    tasks_list.sort(
+        key=lambda t: (t["due_date"] is None, t["due_date"] or datetime.date.max)
+    )
+
+    return render_template(
+        "filter_tasks.html",
+        tasks=tasks_list,
+        users=users,
+        selected_user=selected_user,
+        username=username,
+        today=today_local()
     )
 
 @app.route("/edit_account", methods=["GET", "POST"])
