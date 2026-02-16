@@ -320,20 +320,22 @@ def assigned_tasks():
 
     conn = get_db_connection()
     tasks = conn.execute(
-        "SELECT * FROM tasks WHERE assigned_by = ?",
-        (username,)
+        """
+        SELECT * FROM tasks
+        WHERE assigned_by = ?
+          AND assigned_to != ?
+        """,
+        (username, username)
     ).fetchall()
     conn.close()
 
     today = today_local()
-
     tasks_list = []
 
     for task in tasks:
         task_dict = dict(task)
         due_date_str = task_dict.get("due_date")
 
-        # Convert due_date string to date object
         if due_date_str:
             try:
                 task_dict["due_date"] = datetime.datetime.strptime(
@@ -357,6 +359,7 @@ def assigned_tasks():
         tasks=tasks_list,
         today=today
     )
+
 @app.route("/filter_tasks")
 def filter_tasks():
     if "username" not in session:
