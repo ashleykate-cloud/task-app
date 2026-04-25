@@ -24,7 +24,7 @@
                     <th onclick="sortTable(2)">Assigned By</th>
                     <th onclick="sortTable(3)">Due Date</th>
                     <th onclick="sortTable(4)">Status</th>
-                    <th>Edit</th>
+                    <th>View</th>
                 </tr>
             </thead>
             <tbody>
@@ -38,7 +38,7 @@
                     <td>
                         <a href="{{ url_for('view_task', task_id=task['id']) }}"
                            style="text-decoration: none; color: #1a73e8;">
-                            Edit
+                            View
                         </a>
                     </td>
                 </tr>
